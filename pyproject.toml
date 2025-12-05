@@ -1,0 +1,10 @@
+[project]
+name = "oct-studio"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyside6>=6.10.1",
+    "ruff>=0.14.7",
+]
