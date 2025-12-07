@@ -107,17 +107,6 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(1, 3)
 
 
-    def _load_reference_folder(self):
-        path = QFileDialog.getExistingDirectory(self, "Load Reference Folder", "")
-        if path:
-            try:
-                from .io import load_volume
-
-                self.ref_vol = load_volume(path)
-                QMessageBox.information(self, "Loaded", f"Reference loaded ({path})")
-                self._display_volume(self.ref_vol)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
 
     def _load_deformed(self):
         path, _ = QFileDialog.getOpenFileName(
