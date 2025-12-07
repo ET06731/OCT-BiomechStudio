@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
 
                 self.ref_vol = load_volume(path)
                 QMessageBox.information(self, "Loaded", f"Reference loaded: {path}")
+                self._display_volume(self.ref_vol)
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
 
@@ -106,6 +107,7 @@ class MainWindow(QMainWindow):
 
                 self.def_vol = load_volume(path)
                 QMessageBox.information(self, "Loaded", f"Deformed loaded: {path}")
+                self._display_volume(self.def_vol)
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
 
@@ -131,25 +133,30 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
-    def _show_volume_pair(self):
-        if not hasattr(self, "volume_pair"):
-            return
+    def _display_volume(self, volume):
         try:
             import pyvista as pv
 
-            arr = self.volume_pair.reference.data
+            arr = volume.data
             grid = pv.UniformGrid(
                 dimensions=arr.shape,
-                spacing=self.volume_pair.reference.meta.spacing,
-                origin=self.volume_pair.reference.meta.origin,
+                spacing=volume.meta.spacing,
+                origin=volume.meta.origin,
             )
             grid.point_data["values"] = arr.ravel(order="F")
             self.plotter.clear()
             self.plotter.add_volume(grid, cmap="gray", opacity="linear")
+            # Re-add surfaces if they exist and match? 
+            # For now, just try to build generic surfaces if we have segmentation
             self._build_surface_actors()
             self.plotter.reset_camera()
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+    def _show_volume_pair(self):
+        if not hasattr(self, "volume_pair"):
+            return
+        self._display_volume(self.volume_pair.reference)
 
     def _build_surface_actors(self):
         if not hasattr(self, "segmentation"):
