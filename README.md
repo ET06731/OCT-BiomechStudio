@@ -66,3 +66,5 @@ MIT
 - **Export Formats**: Add support for `.obj`, `.stl`, `.png`, `.jpg`.
 
 test-llm
+test2
+### 分割.mha文件可视化

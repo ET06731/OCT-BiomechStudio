@@ -51,6 +51,23 @@ class MainWindow(QMainWindow):
         self.btn_compute = QPushButton("Compute DVC")
         self.btn_export = QPushButton("Export Report")
 
+        # Visual control
+        from PySide6.QtWidgets import QCheckBox, QGroupBox
+
+        vis_group = QGroupBox("Visualization")
+        vis_layout = QVBoxLayout(vis_group)
+        self.chk_show_volume = QCheckBox("Show Volume")
+        self.chk_show_volume.setChecked(True)
+        self.chk_show_slices = QCheckBox("Show Slices")
+        self.chk_show_slices.setChecked(False)
+        vis_layout.addWidget(self.chk_show_volume)
+        vis_layout.addWidget(self.chk_show_slices)
+        
+        self.chk_show_volume.stateChanged.connect(self._refresh_display)
+        self.chk_show_slices.stateChanged.connect(self._refresh_display)
+        
+        left_layout.addWidget(vis_group)
+
         # Layer control
         from PySide6.QtWidgets import QCheckBox
 
@@ -175,11 +192,26 @@ class MainWindow(QMainWindow):
             )
             grid.point_data["values"] = arr.ravel(order="F")
             self.plotter.clear()
-            self.plotter.add_volume(grid, cmap="gray", opacity="linear")
+            
+            if self.chk_show_volume.isChecked():
+                self.plotter.add_volume(grid, cmap="gray", opacity="linear")
+                
+            if self.chk_show_slices.isChecked():
+                slices = grid.slice_orthogonal()
+                self.plotter.add_mesh(slices, cmap="gray")
+                
             self._build_surface_actors()
             self.plotter.reset_camera()
+            
+            # Store current volume for refresh
+            self._current_volume_to_display = volume
+            
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+    def _refresh_display(self):
+        if hasattr(self, "_current_volume_to_display"):
+            self._display_volume(self._current_volume_to_display)
 
     def _show_volume_pair(self):
         if not hasattr(self, "volume_pair"):
