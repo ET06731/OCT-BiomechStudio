@@ -51,23 +51,6 @@ class MainWindow(QMainWindow):
         self.btn_compute = QPushButton("Compute DVC")
         self.btn_export = QPushButton("Export Report")
 
-        # Visual control
-        from PySide6.QtWidgets import QCheckBox, QGroupBox
-
-        vis_group = QGroupBox("Visualization")
-        vis_layout = QVBoxLayout(vis_group)
-        self.chk_show_volume = QCheckBox("Show Volume")
-        self.chk_show_volume.setChecked(True)
-        self.chk_show_slices = QCheckBox("Show Slices")
-        self.chk_show_slices.setChecked(False)
-        vis_layout.addWidget(self.chk_show_volume)
-        vis_layout.addWidget(self.chk_show_slices)
-        
-        self.chk_show_volume.stateChanged.connect(self._refresh_display)
-        self.chk_show_slices.stateChanged.connect(self._refresh_display)
-        
-        left_layout.addWidget(vis_group)
-
         # Layer control
         from PySide6.QtWidgets import QCheckBox
 
@@ -106,7 +89,31 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 3)
 
+    def _load_reference(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load Reference Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm)"
+        )
+        if path:
+            try:
+                from .io import load_volume
 
+                self.ref_vol = load_volume(path)
+                QMessageBox.information(self, "Loaded", f"Reference loaded: {path}")
+                self._display_volume(self.ref_vol)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
+    def _load_reference_folder(self):
+        path = QFileDialog.getExistingDirectory(self, "Load Reference Folder", "")
+        if path:
+            try:
+                from .io import load_volume
+
+                self.ref_vol = load_volume(path)
+                QMessageBox.information(self, "Loaded", f"Reference loaded ({path})")
+                self._display_volume(self.ref_vol)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
 
     def _load_deformed(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -168,26 +175,11 @@ class MainWindow(QMainWindow):
             )
             grid.point_data["values"] = arr.ravel(order="F")
             self.plotter.clear()
-            
-            if self.chk_show_volume.isChecked():
-                self.plotter.add_volume(grid, cmap="gray", opacity="linear")
-                
-            if self.chk_show_slices.isChecked():
-                slices = grid.slice_orthogonal()
-                self.plotter.add_mesh(slices, cmap="gray")
-                
+            self.plotter.add_volume(grid, cmap="gray", opacity="linear")
             self._build_surface_actors()
             self.plotter.reset_camera()
-            
-            # Store current volume for refresh
-            self._current_volume_to_display = volume
-            
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
-
-    def _refresh_display(self):
-        if hasattr(self, "_current_volume_to_display"):
-            self._display_volume(self._current_volume_to_display)
 
     def _show_volume_pair(self):
         if not hasattr(self, "volume_pair"):
