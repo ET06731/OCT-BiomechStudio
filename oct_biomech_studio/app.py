@@ -24,14 +24,20 @@ class MainWindow(QMainWindow):
         file_menu = QMenu("File", self)
         load_ref_act = QAction("Load Reference", self)
         load_def_act = QAction("Load Deformed", self)
+        load_ref_folder_act = QAction("Load Reference (Folder)", self)
+        load_def_folder_act = QAction("Load Deformed (Folder)", self)
         load_pair_act = QAction("Load Volume Pair", self)
         file_menu.addAction(load_ref_act)
+        file_menu.addAction(load_ref_folder_act)
         file_menu.addAction(load_def_act)
+        file_menu.addAction(load_def_folder_act)
         file_menu.addAction(load_pair_act)
         menubar.addMenu(file_menu)
 
         load_ref_act.triggered.connect(self._load_reference)
+        load_ref_folder_act.triggered.connect(self._load_reference_folder)
         load_def_act.triggered.connect(self._load_deformed)
+        load_def_folder_act.triggered.connect(self._load_deformed_folder)
         load_pair_act.triggered.connect(self._load_volume_pair)
 
         # Central splitter
@@ -93,6 +99,19 @@ class MainWindow(QMainWindow):
 
                 self.ref_vol = load_volume(path)
                 QMessageBox.information(self, "Loaded", f"Reference loaded: {path}")
+                self._display_volume(self.ref_vol)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
+    def _load_reference_folder(self):
+        path = QFileDialog.getExistingDirectory(self, "Load Reference Folder", "")
+        if path:
+            try:
+                from .io import load_volume
+
+                self.ref_vol = load_volume(path)
+                QMessageBox.information(self, "Loaded", f"Reference loaded ({path})")
+                self._display_volume(self.ref_vol)
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
 
@@ -106,6 +125,19 @@ class MainWindow(QMainWindow):
 
                 self.def_vol = load_volume(path)
                 QMessageBox.information(self, "Loaded", f"Deformed loaded: {path}")
+                self._display_volume(self.def_vol)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
+    def _load_deformed_folder(self):
+        path = QFileDialog.getExistingDirectory(self, "Load Deformed Folder", "")
+        if path:
+            try:
+                from .io import load_volume
+
+                self.def_vol = load_volume(path)
+                QMessageBox.information(self, "Loaded", f"Deformed loaded ({path})")
+                self._display_volume(self.def_vol)
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
 
@@ -131,17 +163,15 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
-    def _show_volume_pair(self):
-        if not hasattr(self, "volume_pair"):
-            return
+    def _display_volume(self, volume):
         try:
             import pyvista as pv
 
-            arr = self.volume_pair.reference.data
+            arr = volume.data
             grid = pv.UniformGrid(
                 dimensions=arr.shape,
-                spacing=self.volume_pair.reference.meta.spacing,
-                origin=self.volume_pair.reference.meta.origin,
+                spacing=volume.meta.spacing,
+                origin=volume.meta.origin,
             )
             grid.point_data["values"] = arr.ravel(order="F")
             self.plotter.clear()
@@ -150,6 +180,11 @@ class MainWindow(QMainWindow):
             self.plotter.reset_camera()
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+    def _show_volume_pair(self):
+        if not hasattr(self, "volume_pair"):
+            return
+        self._display_volume(self.volume_pair.reference)
 
     def _build_surface_actors(self):
         if not hasattr(self, "segmentation"):

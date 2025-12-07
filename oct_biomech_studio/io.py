@@ -21,6 +21,31 @@ def _default_meta(shape: Tuple[int, int, int], path: str) -> VolumeMeta:
 
 def load_volume(path: str) -> Volume:
     p = Path(path)
+    
+    if p.is_dir():
+        try:
+            import SimpleITK as sitk
+        except ImportError:
+            raise ImportError("SimpleITK is required to load DICOM series")
+            
+        reader = sitk.ImageSeriesReader()
+        series_ids = reader.GetGDCMSeriesFileNames(str(p))
+        if not series_ids:
+            raise ValueError(f"No DICOM series found in {path}")
+            
+        reader.SetFileNames(series_ids)
+        img = reader.Execute()
+        
+        arr = sitk.GetArrayFromImage(img)
+        meta = VolumeMeta(
+            origin=img.GetOrigin(),
+            spacing=img.GetSpacing(),
+            direction=tuple(img.GetDirection()),
+            shape=(int(arr.shape[0]), int(arr.shape[1]), int(arr.shape[2])),
+            path=str(p),
+        )
+        return Volume(data=arr, meta=meta)
+
     ext = p.suffix.lower()
     if ext == ".npy":
         import numpy as np
