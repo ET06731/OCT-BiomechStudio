@@ -71,6 +71,34 @@ def load_volume(path: str) -> Volume:
             path=str(p),
         )
         return Volume(data=arr, meta=meta)
+    if ext in (".tif", ".tiff"):
+        try:
+            import tifffile
+            import numpy as np
+        except ImportError as e:
+            raise ImportError("tifffile is required to load TIFF: pip install tifffile") from e
+        
+        with tifffile.TiffFile(str(p)) as tif:
+            # 获取所有帧
+            images = []
+            for page in tif.pages:
+                images.append(page.asarray())
+            
+            if not images:
+                raise ValueError("No image frames found in TIFF file")
+            
+            arr = np.stack(images, axis=0)
+            
+        # 确保是3D数据
+        if arr.ndim == 2:
+            arr = arr[np.newaxis, ...]
+        elif arr.ndim > 3:
+            arr = arr.reshape(arr.shape[0], arr.shape[1], -1)
+        
+        meta = _default_meta(
+            (int(arr.shape[0]), int(arr.shape[1]), int(arr.shape[2])), str(p)
+        )
+        return Volume(data=arr, meta=meta)
     raise NotImplementedError("unsupported format")
 
 

@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
 
     def _load_reference(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Reference Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm)"
+            self, "Load Reference Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm *.tif *.tiff)"
         )
         if path:
             try:
@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
 
     def _load_deformed(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Deformed Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm)"
+            self, "Load Deformed Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm *.tif *.tiff)"
         )
         if path:
             try:
@@ -111,12 +111,12 @@ class MainWindow(QMainWindow):
 
     def _load_volume_pair(self):
         ref_path, _ = QFileDialog.getOpenFileName(
-            self, "Load Reference Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm)"
+            self, "Load Reference Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm *.tif *.tiff)"
         )
         if not ref_path:
             return
         def_path, _ = QFileDialog.getOpenFileName(
-            self, "Load Deformed Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm)"
+            self, "Load Deformed Volume", "", "Volumes (*.npy *.nii *.nii.gz *.dcm *.tif *.tiff)"
         )
         if not def_path:
             return
