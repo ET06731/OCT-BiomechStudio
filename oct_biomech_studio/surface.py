@@ -30,14 +30,25 @@ def build_surface_meshs(segmentation, smoothing: int = 0):
     return meshes
 
 
+
 def add_surface_actors(plotter, meshes):
     actors = {}
     for label, mesh in meshes.items():
-        if mesh is None:
+        if mesh is None or mesh.n_points == 0:
             continue
         color = LABEL_COLORS[label]
+        # 美化渲染：启用 PBR，增加平滑着色，模拟生物组织质感
         actor = plotter.add_mesh(
-            mesh, color=color, opacity=0.9, name=f"surf_{label.name}"
+            mesh,
+            color=color,
+            opacity=0.85,
+            name=f"surf_{label.name}",
+            pbr=True,             # 基于物理的渲染
+            metallic=0.1,         # 低金属度（有机物）
+            roughness=0.3,        # 较低粗糙度（湿润/光滑）
+            diffuse=0.8,
+            specular=0.5,
+            smooth_shading=True,  # 平滑着色
         )
         actors[label] = actor
     return actors
