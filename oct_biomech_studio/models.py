@@ -63,3 +63,5 @@ class StrainTensor:
 class DVCResult:
     displacement: DisplacementField
     strain: StrainTensor
+
+import oct_biomech_studio.surface
