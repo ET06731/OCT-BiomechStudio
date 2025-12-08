@@ -30,8 +30,6 @@ def build_surface_meshs(segmentation, smoothing: int = 0):
     return meshes
 
 
-    return actors
-
 
 def add_surface_actors(plotter, meshes):
     actors = {}
